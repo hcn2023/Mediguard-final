@@ -172,7 +172,29 @@ def view_tracking():
     c.execute("SELECT * FROM medication_tracking")
     tracking = c.fetchall()
     conn.close()
-    return render_template('view_tracking.html', tracking=tracking)
+
+    # AI Reminder Message Generation
+    # Group by patient and summarize
+    from collections import defaultdict
+    patient_summary = defaultdict(list)
+    for record in tracking:
+        # record: (id, patient_name, medication, dosage, scheduled_time, taken)
+        taken_value = record[5]
+        # Interpret numeric values as boolean
+        if isinstance(taken_value, (int, float)) or (isinstance(taken_value, str) and taken_value.isdigit()):
+            taken_bool = bool(int(taken_value))
+            taken_str = 'Yes' if taken_bool else 'No'
+        else:
+            taken_str = taken_value
+        patient_summary[record[1]].append(f"{record[2]} ({record[3]}) at {record[4]} - Taken: {taken_str}")
+    summary_lines = []
+    for patient, meds in patient_summary.items():
+        summary_lines.append(f"{patient}:")
+        for med in meds:
+            summary_lines.append(med)
+    ai_reminder_message = "\n".join(summary_lines)
+
+    return render_template('view_tracking.html', tracking=tracking, ai_reminder_message=ai_reminder_message)
 
 @app.route('/update_taken/<int:id>', methods=['POST'])
 def update_taken(id):
