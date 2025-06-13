@@ -60,6 +60,49 @@
         #ai-reminder-list li {
             margin-left: 20px;
         }
+        /* Medication Reminder Modal Styles */
+        #medication-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        #medication-modal > div {
+            background: #fff;
+            padding: 32px 24px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: auto;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        #modal-title {
+            color: #2e7d32;
+        }
+        #modal-message {
+            margin: 18px 0 24px 0;
+            font-size: 1.1em;
+        }
+        #modal-confirm {
+            background: #388e3c;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 5px;
+        }
+        #modal-skip {
+            background: #bdbdbd;
+            color: #333;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -135,6 +178,18 @@
         {% endif %}
         {% if loop.last %}</ul>{% endif %}
     {% endfor %}
+</div>
+
+<!-- Medication Reminder Modal -->
+<div id="medication-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:32px 24px; border-radius:12px; max-width:400px; margin:auto; box-shadow:0 2px 16px rgba(0,0,0,0.2); text-align:center;">
+    <h3 id="modal-title" style="color:#2e7d32;">Medication Reminder</h3>
+    <div id="modal-message" style="margin:18px 0 24px 0; font-size:1.1em;"></div>
+    <div style="display:flex; gap:16px; justify-content:center;">
+      <button id="modal-confirm" style="background:#388e3c; color:white; border:none; padding:8px 18px; border-radius:5px;">Confirm Taken</button>
+      <button id="modal-skip" style="background:#bdbdbd; color:#333; border:none; padding:8px 18px; border-radius:5px;">Skip</button>
+    </div>
+  </div>
 </div>
 
 <a class="back-btn" href="/dashboard">← Back to Dashboard</a>
@@ -216,6 +271,88 @@ function toggleSpeech() {
         btn.textContent = '🔊 Read Aloud';
     }
 }
+
+// Pass tracking data from Flask to JS
+const trackingData = {{ tracking|tojson|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    }
+    trackingData.forEach(record => {
+        const id = record[0];
+        const patient = record[1];
+        const medication = record[2];
+        const scheduledTime = record[4];
+        const taken = record[5];
+        if (!patient || !medication || !scheduledTime || taken === 'Yes') return;
+        // Parse time
+        let medTime;
+        if (/^\d{2}:\d{2}$/.test(scheduledTime)) {
+            const today = new Date();
+            const dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            medTime = new Date(dateStr + 'T' + scheduledTime);
+        } else {
+            medTime = new Date(scheduledTime.replace(' ', 'T'));
+            if (isNaN(medTime)) {
+                let parts = scheduledTime.match(/(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+                if (parts) {
+                    medTime = new Date(parts[1] + 'T' + parts[2]);
+                }
+            }
+        }
+        if (isNaN(medTime)) {
+            console.log('Could not parse scheduled time:', scheduledTime);
+            return;
+        }
+        let now = new Date();
+        let delay = medTime - now;
+        if (delay > 0) {
+            const notifText = `Patient ${patient} needs to take their medication "${medication}" now`;
+            setTimeout(() => {
+                // Show browser notification
+                new Notification(notifText);
+                // Show modal
+                showMedicationModal(notifText, id);
+            }, delay);
+        }
+    });
+
+    // Modal logic
+    function showMedicationModal(message, medId) {
+        const modal = document.getElementById('medication-modal');
+        const msgDiv = document.getElementById('modal-message');
+        msgDiv.textContent = message;
+        modal.style.display = 'flex';
+        // Read aloud after 1 second
+        setTimeout(() => {
+            if ('speechSynthesis' in window) {
+                const utter = new SpeechSynthesisUtterance(message);
+                utter.rate = 1;
+                utter.pitch = 1;
+                utter.lang = 'en-US';
+                window.speechSynthesis.speak(utter);
+            }
+        }, 1000);
+        // Confirm button
+        document.getElementById('modal-confirm').onclick = function() {
+            // Mark as taken via POST
+            fetch(`/update_taken/${medId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'taken=Yes'
+            }).then(() => {
+                modal.style.display = 'none';
+                window.location.reload();
+            });
+        };
+        // Skip button
+        document.getElementById('modal-skip').onclick = function() {
+            modal.style.display = 'none';
+        };
+    }
+});
 </script>
 
 </body>
