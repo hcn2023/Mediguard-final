@@ -10,6 +10,19 @@ app.secret_key = 'your_secret_key'  # Needed for flash messages
 def init_db():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
+
+    # Table for registered users
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fullname TEXT NOT NULL,
+            username TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+
+    # Table for patients
     c.execute('''
         CREATE TABLE IF NOT EXISTS patients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,17 +33,24 @@ def init_db():
             dosage TEXT
         )
     ''')
+
+    # Table for medication tracking
     c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS medication_tracking (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fullname TEXT NOT NULL,
-            username TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL
+            patient_name TEXT NOT NULL,
+            medication TEXT NOT NULL,
+            dosage TEXT NOT NULL,
+            scheduled_time TEXT NOT NULL,
+            taken TEXT DEFAULT 'No'
         )
     ''')
+
     conn.commit()
     conn.close()
+
+   
+
 
 # --- Landing Page ---
 @app.route('/')
@@ -86,6 +106,29 @@ def dashboard():
     username = request.args.get('username')
     return render_template('dashboard.html', username=username)
 
+@app.route('/add_tracking', methods=['GET', 'POST'])
+def add_tracking():
+    if request.method == 'POST':
+        patient_name = request.form['patient_name']
+        medication = request.form['medication']
+        dosage = request.form['dosage']
+        scheduled_time = request.form['scheduled_time']
+
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO medication_tracking (patient_name, medication, dosage, scheduled_time) VALUES (?, ?, ?, ?)",
+                  (patient_name, medication, dosage, scheduled_time))
+        conn.commit()
+        conn.close()
+
+        flash('Medication tracking added successfully!')
+        return redirect('/add_tracking')
+
+       
+
+    return render_template('add_tracking.html')
+
+
 # --- Add Patient ---
 @app.route('/add_patient', methods=['GET', 'POST'])
 def add_patient():
@@ -122,12 +165,40 @@ def view_patient():
     conn.close()
     return render_template('view_patient.html', patients=patients)
 
+@app.route('/view_tracking')
+def view_tracking():
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM medication_tracking")
+    tracking = c.fetchall()
+    conn.close()
+    return render_template('view_tracking.html', tracking=tracking)
+
+@app.route('/update_taken/<int:id>', methods=['POST'])
+def update_taken(id):
+    new_status = request.form['taken']
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute('UPDATE medication_tracking SET taken = ? WHERE id = ?', (new_status, id))
+    conn.commit()
+    conn.close()
+    flash("✅ Medication status updated successfully!")
+    return redirect(url_for('view_tracking'))
+
+
+
+
+
+
 
 # --- Logout ---
 @app.route('/logout')
 def logout():
     flash('You have been logged out.')
     return redirect('/login')
+
+
+
 
 # --- Main Entry Point ---
 if __name__ == '__main__':

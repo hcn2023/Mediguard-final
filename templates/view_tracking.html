@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medication Tracking Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e6f4ea;
+            margin: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+            background-color: #2e7d32;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Medication Tracking Records</h1>
+
+<table>
+    {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul style="color: green;">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+    <tr>
+        <th>Patient Name</th>
+        <th>Medication</th>
+        <th>Dosage</th>
+        <th>Scheduled Time</th>
+        <th>Taken</th>
+        <th>Action</th>
+    </tr>
+
+    {% for record in tracking %}
+    <tr>
+        <td>{{ record[1] }}</td>
+        <td>{{ record[2] }}</td>
+        <td>{{ record[3] }}</td>
+        <td>{{ record[4] }}</td>
+        <form action="/update_taken/{{ record[0] }}" method="POST">
+            <td>
+                <select name="taken">
+                    <option value="Yes" {% if record[5] == 'Yes' %}selected{% endif %}>Yes</option>
+                    <option value="No" {% if record[5] == 'No' %}selected{% endif %}>No</option>
+                </select>
+            </td>
+            <td>
+                <button type="submit">Update</button>
+            </td>
+        </form>
+    </tr>
+    {% endfor %}
+
+    <script>
+  setTimeout(function(){
+    let msg = document.querySelector('ul');
+    if (msg) {
+      msg.style.display = 'none';
+    }
+  }, 3000);
+</script>
+
+</table>
+
+<a class="back-btn" href="/dashboard">← Back to Dashboard</a>
+
+</body>
+</html>
