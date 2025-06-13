@@ -36,6 +36,7 @@
             margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
         }
 
         input[type="submit"] {
@@ -55,6 +56,10 @@
         .message {
             color: green;
             margin-bottom: 15px;
+        }
+
+        .login-link {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -85,5 +90,8 @@
 
         <input type="submit" value="Register">
     </form>
+    <div class="login-link">
+        Already have an account? <a href="/login">Login here</a>
+    </div>
 </body>
 </html>
