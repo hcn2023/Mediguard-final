@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medication Tracking Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e6f4ea;
+            margin: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+            background-color: #2e7d32;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        #ai-reminder-section {
+            margin-top: 40px;
+            background: #f9fff9;
+            border: 1px solid #b2dfdb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #ai-reminder-list li {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Medication Tracking Records</h1>
+
+<table>
+    {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul id="flash-messages" style="color: green;">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+    <tr>
+        <th>Patient Name</th>
+        <th>Medication</th>
+        <th>Dosage</th>
+        <th>Scheduled Time</th>
+        <th>Taken</th>
+        <th>Action</th>
+    </tr>
+
+    {% for record in tracking %}
+    <tr>
+        <td>{{ record[1] }}</td>
+        <td>{{ record[2] }}</td>
+        <td>{{ record[3] }}</td>
+        <td>{{ record[4] }}</td>
+        <form action="/update_taken/{{ record[0] }}" method="POST">
+            <td>
+                <select name="taken">
+                    <option value="Yes" {% if record[5] == 'Yes' %}selected{% endif %}>Yes</option>
+                    <option value="No" {% if record[5] == 'No' %}selected{% endif %}>No</option>
+                </select>
+            </td>
+            <td>
+                <button type="submit">Update</button>
+            </td>
+        </form>
+    </tr>
+    {% endfor %}
+
+    <script>
+  setTimeout(function(){
+    let msg = document.getElementById('flash-messages');
+    if (msg) {
+      msg.style.display = 'none';
+    }
+  }, 3000);
+</script>
+
+</table>
+
+<!-- AI Reminder Message Section -->
+<div id="ai-reminder-section" style="margin-top: 40px; background: #f9fff9; border: 1px solid #b2dfdb; padding: 20px; border-radius: 8px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: #2e7d32; margin: 0;">Reminder Summary</h2>
+        <button onclick="toggleSpeech()" id="read-aloud-btn" style="background: #388e3c;">🔊 Read Aloud</button>
+    </div>
+    {% set lines = ai_reminder_message.split('\n') %}
+    {% set current_patient = None %}
+    {% for line in lines %}
+        {% if line.endswith(':') %}
+            {% if not loop.first %}</ul>{% endif %}
+            <div class="reminder-header" style="font-weight: bold; margin-top: 24px; margin-bottom: 6px; font-size: 1.1em; padding-left: 4px;">{{ line[:-1] }}</div>
+            <ul style="margin-left: 28px;">
+        {% else %}
+            <li class="reminder-line" id="reminder-{{ loop.index }}">{{ line }}.</li>
+        {% endif %}
+        {% if loop.last %}</ul>{% endif %}
+    {% endfor %}
+</div>
+
+<a class="back-btn" href="/dashboard">← Back to Dashboard</a>
+
+<script>
+let isSpeaking = false;
+let utterance = null;
+
+function toggleSpeech() {
+    const btn = document.getElementById('read-aloud-btn');
+    if (!isSpeaking) {
+        // Collect both patient names and medication lines in order
+        const summaryElements = Array.from(document.querySelectorAll('.reminder-header, .reminder-line'));
+        const lines = summaryElements.map(el => el.textContent);
+        const text = lines.join('. ') + '.';
+        if ('speechSynthesis' in window) {
+            utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.lang = 'en-US';
+            let wordIndex = 0;
+            let wordStarts = [];
+            let pos = 0;
+            // Calculate word start positions for highlighting
+            text.split(/(\s+)/).forEach(word => {
+                if (word.trim() !== '') {
+                    wordStarts.push(pos);
+                }
+                pos += word.length;
+            });
+            utterance.onboundary = function(event) {
+                if (event.name === 'word') {
+                    // Remove previous highlights
+                    document.querySelectorAll('.reminder-line').forEach(li => li.innerHTML = li.textContent);
+                    document.querySelectorAll('.reminder-header').forEach(div => div.innerHTML = div.textContent);
+                    // Find which element the current word is in
+                    let charIndex = event.charIndex;
+                    let acc = 0;
+                    for (let i = 0; i < lines.length; i++) {
+                        if (charIndex < acc + lines[i].length + 2) { // +2 for '. '
+                            let relIndex = charIndex - acc;
+                            let line = lines[i];
+                            let before = line.slice(0, relIndex);
+                            let after = line.slice(relIndex);
+                            let match = after.match(/^(\S+)/);
+                            if (match) {
+                                let word = match[1];
+                                let highlighted = before + '<span style="background:#b2dfdb;border-radius:4px;">' + word + '</span>' + after.slice(word.length);
+                                if (summaryElements[i].classList.contains('reminder-line')) {
+                                    document.querySelectorAll('.reminder-line')[summaryElements.slice(0,i+1).filter(e=>e.classList.contains('reminder-line')).length-1].innerHTML = highlighted;
+                                } else {
+                                    document.querySelectorAll('.reminder-header')[summaryElements.slice(0,i+1).filter(e=>e.classList.contains('reminder-header')).length-1].innerHTML = highlighted;
+                                }
+                            }
+                            break;
+                        }
+                        acc += lines[i].length + 2;
+                    }
+                }
+            };
+            utterance.onend = function() {
+                document.querySelectorAll('.reminder-line').forEach(li => li.innerHTML = li.textContent);
+                document.querySelectorAll('.reminder-header').forEach(div => div.innerHTML = div.textContent);
+                isSpeaking = false;
+                btn.textContent = '🔊 Read Aloud';
+            };
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+            isSpeaking = true;
+            btn.textContent = '⏹️ Stop';
+        } else {
+            alert('Sorry, your browser does not support speech synthesis.');
+        }
+    } else {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.reminder-line').forEach(li => li.innerHTML = li.textContent);
+        document.querySelectorAll('.reminder-header').forEach(div => div.innerHTML = div.textContent);
+        isSpeaking = false;
+        btn.textContent = '🔊 Read Aloud';
+    }
+}
+</script>
+
+</body>
+</html>

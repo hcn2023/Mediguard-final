@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Patients</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #fff;
+    }
+
+    #searchInput {
+      display: block;
+      margin: 20px auto;
+      padding: 10px;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    .card {
+      background-color: #ffffffcc;
+      padding: 15px;
+      margin: 15px auto;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card p {
+      margin: 5px 0;
+    }
+
+    .card strong {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h2>Patient List</h2>
+  <input type="text" id="searchInput" placeholder="Search by name or condition...">
+
+  <div id="patientList"></div>
+
+  <script>
+    fetch("http://127.0.0.1:5000/api/patients")
+      .then((response) => response.json())
+      .then((patients) => {
+        const list = document.getElementById("patientList");
+        const searchInput = document.getElementById("searchInput");
+
+        function displayPatients(filteredPatients) {
+          list.innerHTML = "";
+          filteredPatients.forEach((patient) => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <p><strong>Name:</strong> ${patient.name}</p>
+              <p><strong>Age:</strong> ${patient.age}</p>
+              <p><strong>Condition:</strong> ${patient.condition}</p>
+              <p><strong>Medication:</strong> ${patient.medication}</p>
+              <p><strong>Dosage:</strong> ${patient.dosage}</p>
+            `;
+            list.appendChild(card);
+          });
+        }
+
+        displayPatients(patients);
+
+        searchInput.addEventListener("input", function () {
+          const search = this.value.toLowerCase();
+          const filtered = patients.filter((p) =>
+            p.name.toLowerCase().includes(search) ||
+            p.condition.toLowerCase().includes(search)
+          );
+          displayPatients(filtered);
+        });
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Tracker</title>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      color: white;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    select, button {
+      padding: 10px;
+      width: 80%;
+      margin-top: 15px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #ff4d4d;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Mood Tracker</h2>
+    <form id="moodForm">
+      <label for="mood">How do you feel today?</label><br>
+      <select id="mood" required>
+        <option value="">Select mood</option>
+        <option value="Happy">Happy</option>
+        <option value="Sad">Sad</option>
+        <option value="Anxious">Anxious</option>
+        <option value="Calm">Calm</option>
+        <option value="Confused">Confused</option>
+      </select><br>
+      <button type="submit">Submit Mood</button>
+    </form>
+    <p id="responseMsg"></p>
+  </div>
+
+  <script>
+    document.getElementById('moodForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const mood = document.getElementById('mood').value;
+
+      fetch('http://127.0.0.1:5000/api/mood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood: mood })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('responseMsg').innerText = data.message;
+      })
+      .catch(error => {
+        document.getElementById('responseMsg').innerText = 'Failed to submit mood';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Patient - MediGuard</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .form-container {
+            margin: 60px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Add Patient</h2>
+        <form id="addPatientForm">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="number" id="age" placeholder="Age" required>
+            <input type="text" id="condition" placeholder="Condition" required>
+            <input type="text" id="medication" placeholder="Medication" required>
+            <input type="text" id="dosage" placeholder="Dosage" required>
+            <button type="submit">Add Patient</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("addPatientForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const age = document.getElementById("age").value;
+            const condition = document.getElementById("condition").value;
+            const medication = document.getElementById("medication").value;
+            const dosage = document.getElementById("dosage").value;
+
+            fetch("http://127.0.0.1:5000/api/add_patient", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    age: age,
+                    condition: condition,
+                    medication: medication,
+                    dosage: dosage
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById("addPatientForm").reset();
+            })
+            .catch(error => {
+                alert("Error: " + error);
+                console.error("Fetch error:", error);
+            });
+        });
+    </script>
+</body>
+</html>

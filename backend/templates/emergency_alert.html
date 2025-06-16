@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Alerts</title>
+</head>
+<body style="background: linear-gradient(to bottom right, #2193b0, #6dd5ed); font-family: Arial, sans-serif; text-align: center; padding-top: 50px;">
+
+    <div style="background: white; width: 400px; margin: auto; padding: 30px; border-radius: 10px;">
+        <h2 style="color: #333;">Emergency Alert</h2>
+        <form id="alertForm">
+            <label for="alertType">Select Alert Type:</label><br><br>
+            <select id="alertType" style="width: 90%; padding: 10px;">
+                <option value="Medical Emergency">Medical Emergency</option>
+                <option value="Fall Detected">Fall Detected</option>
+                <option value="Need Help">Need Help</option>
+            </select><br><br>
+            <button type="submit" style="padding: 10px 20px; background-color: #e74c3c; color: white; border: none; border-radius: 5px;">Send Alert</button>
+        </form>
+        <p id="responseMsg" style="color: green; margin-top: 10px;"></p>
+    </div>
+
+    <script>
+        document.getElementById("alertForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const alertType = document.getElementById("alertType").value;
+
+            fetch("http://127.0.0.1:5000/api/emergency_alert", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ type: alertType })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("responseMsg").innerText = data.message;
+            });
+        });
+    </script>
+
+</body>
+</html>

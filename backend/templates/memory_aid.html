@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memory Aid</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      resize: none;
+      height: 100px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #e53935;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .message {
+      margin-top: 15px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Memory Aid</h2>
+    <textarea id="note" placeholder="Enter memory note here..."></textarea>
+    <button onclick="submitNote()">Save Note</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    function submitNote() {
+      const note = document.getElementById("note").value;
+
+      fetch("http://127.0.0.1:5000/api/memory_aid", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note: note })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("message").innerText = data.message;
+        document.getElementById("note").value = "";
+      })
+      .catch(error => {
+        document.getElementById("message").innerText = "Error saving note.";
+      });
+    }
+  </script>
+</body>
+</html>

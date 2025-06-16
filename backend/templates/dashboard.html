@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dementia-Friendly Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #84fab0, #8fd3f4);
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      color: #333;
+    }
+    .card {
+      background: #fff;
+      padding: 30px;
+      margin: 30px auto;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .button-group a {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #004aad;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Your Dementia Dashboard</h1>
+  <div class="card">
+    <h2>Today's Medication Reminder</h2>
+    <p>{{ reminder_message }}</p>
+  </div>
+
+  <div class="card">
+    <h2>Quick Access</h2>
+    <div class="button-group">
+      <a href="/add_tracking">Add Medication Status</a>
+      <a href="/view_tracking">View Status</a>
+      <a href="/memory_aid">Memory Aid</a>
+    </div>
+  </div>
+</body>
+</html>

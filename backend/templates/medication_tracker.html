@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medication Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        .message {
+            margin-top: 15px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Medication Tracker</h2>
+        <input type="text" id="patientName" placeholder="Enter patient name">
+        <select id="takenStatus">
+            <option value="">Medication taken?</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+        <button onclick="submitMedication()">Submit</button>
+        <div class="message" id="messageArea"></div>
+    </div>
+
+    <script>
+        function submitMedication() {
+            const name = document.getElementById('patientName').value;
+            const status = document.getElementById('takenStatus').value;
+
+            fetch("http://127.0.0.1:5000/api/medication_tracker", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    status: status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("messageArea").textContent = data.message;
+            })
+            .catch(error => {
+                document.getElementById("messageArea").textContent = "Something went wrong.";
+            });
+        }
+    </script>
+</body>
+</html>

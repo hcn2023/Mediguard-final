@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - MediGuard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #2193b0, #6dd5ed);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .register-box {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 350px;
+    }
+
+    .register-box h2 {
+      margin-bottom: 10px;
+    }
+
+    .register-box p {
+      font-size: 0.9em;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #e53935;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #c62828;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 0.85em;
+      color: #333;
+    }
+
+    .footer a {
+      color: #0d47a1;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-box">
+    <h2>Create Your MediGuard Account</h2>
+    <p>Your Trusted Companion for Dementia Support and Medication Management</p>
+    <input type="text" id="full_name" placeholder="Full Name" required>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="email" id="email" placeholder="Email Address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="registerUser()">Register</button>
+    <div class="footer">
+      Already have an account? <a href="login.html">Login here</a>
+      <br><br>
+      © 2025 MediGuard. Empowering Dementia Care with Technology.
+    </div>
+  </div>
+
+  <script>
+    function registerUser() {
+      const full_name = document.getElementById('full_name').value;
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          full_name,
+          username,
+          email,
+          password
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message || data.error);
+        if (data.message) {
+          window.location.href = "login.html"; // Redirect after successful registration
+        }
+      })
+      .catch(error => {
+        alert("An error occurred during registration.");
+        console.error("Error:", error);
+      });
+    }
+  </script>
+
+</body>
+</html>
