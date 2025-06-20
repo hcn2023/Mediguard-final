@@ -1,31 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import AddPatient from './AddPatient';
+import Register from './Register';
+import Login from './login';
+import Home from './Home';
+import AddMedication from './AddMedication';
+import ViewMedications from './ViewMedications';
+import ViewPatients from './ViewPatients';
+
 
 function App() {
-  const [message, setMessage] = useState('Loading...');
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/ping')
-      .then(response => response.json())
-      .then(data => setMessage(data.message))
-      .catch(error => {
-        setMessage('Error connecting to backend');
-        console.error('Error:', error);
-      });
-  }, []);
-
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      background: 'linear-gradient(to right, #a8edea, #fed6e3)',
-      fontFamily: 'Arial'
-    }}>
-      <h1 style={{ color: '#222' }}>MediGuard Frontend</h1>
-      <p style={{ fontSize: '20px', color: '#555' }}>{message}</p>
-    </div>
+    <Router>
+      <Routes>
+        
+        <Route path="/add-patient" element={<AddPatient />} />
+        <Route path="/" element={<Navigate to="/register" />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/add-medication" element={<AddMedication />} />
+        <Route path="/view-medications" element={<ViewMedications />} />
+        <Route path="/view-schedule" element={<ViewMedications />} />
+        <Route path="/view-patients" element={<ViewPatients />} />
+        
+
+      </Routes>
+    </Router>
   );
 }
 
